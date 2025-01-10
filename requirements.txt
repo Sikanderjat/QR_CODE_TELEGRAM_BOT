@@ -1,0 +1,4 @@
+qrcode
+telegram
+telegram[PIL]
+
