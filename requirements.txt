@@ -1,4 +1,4 @@
 qrcode
-telegram
+python-telegram-bot
 telegram[PIL]
 
