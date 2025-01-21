@@ -1,8 +1,11 @@
+import os
 import qrcode as qr
 from telegram import Update
 from telegram.ext import Updater ,Application ,CommandHandler ,MessageHandler,filters,ContextTypes
 
-bot_api="7681906379:AAGsM-gpLxdt0AKUtjXHrcZ6yeJ6fC4rPnc"
+bot_api = os.getenv(
+"TELEGRAM_BOT_API"
+)
 
 def qr_code_generator(text):
     
