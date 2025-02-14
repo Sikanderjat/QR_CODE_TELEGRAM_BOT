@@ -28,13 +28,28 @@ async def handel_text(update:Update, context=ContextTypes.DEFAULT_TYPE):
     with open("qrcode.png","rb") as photo:
         await update.message.reply_photo(photo)
 
-if __name__=="__main__":
-    app=Application.builder().token(bot_api).build()
 
-    app.add_handler(CommandHandler("start",start))
-    app.add_handler(CommandHandler("help",help_command))
-    app.add_handler(CommandHandler("about",about))
-    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND,handel_text))
+def main() -> None:
+    application = Application.builder().token(bot_api).build()
 
-    print("bot is start")
-    app.run_polling()
+    # Register handlers
+    application.add_handler(CommandHandler("start", start))
+    application.add_handler(CommandHandler("generate", generate_qr))
+    application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
+
+    # Webhook setup for Render
+    PORT = int(os.environ.get("PORT", 5000))
+    WEBHOOK_URL = "https://your-render-app-name.onrender.com"  # Replace with your Render URL
+
+    async def on_startup(app):
+        await app.bot.set_webhook(WEBHOOK_URL)
+
+    application.run_webhook(
+        listen="0.0.0.0",
+        port=PORT,
+        webhook_url=WEBHOOK_URL,
+        on_startup=on_startup
+    )
+
+if __name__ == "__main__":
+    main()
