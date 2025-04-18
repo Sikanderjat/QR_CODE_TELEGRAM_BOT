@@ -2,9 +2,10 @@ import qrcode as qr
 from telegram import Update
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes
 from flask import Flask, request
+import os
 
 app = Flask(__name__)
-TELEGRAM_TOKEN = "7681906379:AAGsM-gpLxdt0AKUtjXHrcZ6yeJ6fC4rPnc"
+TELEGRAM_TOKEN = os.getenv("API_KEY")
 
 # Initialize the bot application
 bot_app = Application.builder().token(TELEGRAM_TOKEN).build()
