@@ -35,6 +35,10 @@ def start(update: Update, context):
 def help_command(update: Update, context):
     update.message.reply_text("Just send me any text, and I’ll convert it into a QR code.")
 
+def about_command(update: Update, context):
+    update.message.reply_text("This is a simple QR code generator bot made by SIKANDER." \
+    "More features looding soon")
+
 
 def handle_text(update: Update, context):
     user_text = update.message.text.strip()
@@ -54,6 +58,7 @@ def handle_text(update: Update, context):
 # Register handlers
 dispatcher.add_handler(CommandHandler("start", start))
 dispatcher.add_handler(CommandHandler("help", help_command))
+dispatcher.add_handler(CommandHandler("about", about_command))
 dispatcher.add_handler(MessageHandler(Filters.text & ~Filters.command, handle_text))
 
 
