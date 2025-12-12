@@ -75,6 +75,10 @@ def receive_link():
     raw = request.get_data() or b""
     header = request.headers.get("X-Webhook-Secret", "")
 
+    print("DEBUG_RECEIVER_HEADER:", repr(header))
+    print("DEBUG_EXPECTED_SECRET:", repr(EXPECTED_SECRET))
+
+
     # verify signature
     if USE_HMAC and EXPECTED_SECRET:
         if not verify_hmac(raw, header, EXPECTED_SECRET):
@@ -134,3 +138,4 @@ def home():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
