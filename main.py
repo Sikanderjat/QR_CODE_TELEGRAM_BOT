@@ -2,10 +2,14 @@ import os
 from threading import Thread
 
 import qrcode as qr
-from flask import Flask, request
 from telegram import Bot, Update
 from telegram.ext import Dispatcher, CommandHandler, MessageHandler, Filters
 from telegram.utils.request import Request
+
+import hmac
+import hashlib
+from flask import Flask, request, jsonify
+
 
 # --------------- CONFIG ---------------
 
@@ -79,6 +83,50 @@ def webhook():
 def home():
     return "✅ QR Code Bot (Webhook Active)"
 
+# Set these as environment variables on Render (preferred)
+EXPECTED_SECRET = os.environ.get("OTHER_BOT_SECRET", "himynameisikander")  # REPLACE_ME or set env var
+USE_HMAC = os.environ.get("USE_HMAC", "0") == "1"  # set to "1" on Render to enable HMAC verify
+
+def verify_hmac(raw_body: bytes, header_signature: str, secret: str) -> bool:
+    # header expected: "sha256=<hex>"
+    if not header_signature or not header_signature.startswith("sha256="):
+        return False
+    sig_hex = header_signature.split("=", 1)[1]
+    computed = hmac.new(secret.encode(), raw_body, hashlib.sha256).hexdigest()
+    return hmac.compare_digest(sig_hex, computed)
+
+@app.route("/receive_link", methods=["POST"])
+def receive_link():
+    raw = request.get_data() or b""
+    header = request.headers.get("X-Webhook-Secret", "")
+
+    # verify either HMAC or plain header match
+    if USE_HMAC and EXPECTED_SECRET:
+        if not verify_hmac(raw, header, EXPECTED_SECRET):
+            return jsonify({"error":"invalid signature"}), 403
+    else:
+        if header != (EXPECTED_SECRET or ""):
+            return jsonify({"error":"invalid secret"}), 403
+
+    # parse JSON body
+    data = request.get_json(force=True, silent=True) or {}
+    url = data.get("url")
+    caption = data.get("caption", "")
+    fetched_at = data.get("fetched_at", "")
+
+    # quick sanity check
+    if not url:
+        return jsonify({"error":"missing url"}), 400
+
+    # For now just log and acknowledge (expand this to generate QR or forward to Telegram)
+    print("RECEIVED LINK:", url, "caption:", caption, "fetched_at:", fetched_at)
+
+    # TODO: generate QR / forward to telegram here
+    return jsonify({"ok": True, "received_url": url}), 200
+
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
+
 
 # --------------- RUN SERVER ---------------
 
@@ -86,3 +134,4 @@ if __name__ == "__main__":
     # Render will pass PORT env var; fallback for local run
     port = int(os.environ.get("PORT", 8000))
     app.run(host="0.0.0.0", port=port)
+
